@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="BR_ExtraTrophiesAwarded" title="Brivium - Extra Trophies Awarded" version_string="1.4.4" version_id="1040300" url="http://brivium.com/" install_callback_class="Brivium_ExtraTrophiesAwarded_Installer" install_callback_method="install" uninstall_callback_class="Brivium_ExtraTrophiesAwarded_Installer" uninstall_callback_method="uninstall">
+  <admin_navigation/>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="BRETA_modify_trophies"><![CDATA[<script type="text/javascript">
+	function  readURL(input,thumbimage) {
+		if  (input.files && input.files[0]) {
+			var  reader = new FileReader();
+			reader.onload = function (e) {
+				$("#thumbimage").attr('src', e.target.result);
+			}
+			reader.readAsDataURL(input.files[0]);
+		}else{
+			$("#thumbimage").attr('src', input.value);	  
+		}
+		$("#thumbimage").show();
+		$(".removeimg").show();   
+	}
+	$(document).ready(function () {
+		$(".removeimg").click(function () {
+			$("#thumbimage").attr('src', '').hide();
+			$("#myfileupload").html('<input type="file" id="uploadfile"  onchange="readURL(this);" />');
+			$(".removeimg").hide();
+		});
+   	})
+</script>
+
+<style type="text/css">
+   
+   .removeimg
+   {
+    display:none;
+   }
+   #thumbbox
+   {
+    position:relative;
+    width:100px;
+    margin-top: 5px;
+   }
+   .removeimg
+   {
+	background: url("styles/brivium/ExtraTrophiesAwarded/remove.png") repeat scroll 0 0 transparent;
+	height: 12px;
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	width: 12px;
+   }
+</style>
+
+<xen:if is="!{$newTrophy}">
+	<dl class="ctrlUnit">
+	 	<dt>{xen:phrase BRETA_current_icon}:</dt>
+	 	<dd>
+	  		<xen:if is="{$trophy.breta_select} == 'upload_file' || {$trophy.breta_select} == 'default_url' || {$trophy.breta_select} == ''" >
+	   			<img src="{xen:helper trophyIcon, $trophy}" style="margin-left: 20px" >
+	 		<xen:elseif is="{$trophy.breta_select} == 'upload_url'" />
+	   			<img src="{$trophy.breta_url}" style="margin-left: 20px" >
+	  		<xen:elseif is="{$trophy.breta_select} == 'font_awesome'" />
+	   			<i class="fa {$trophy.breta_fa}" style="margin-left: 20px; font-size: 34px"></i>
+	 		<xen:else />
+	 			<p style="font-style:italic; margin-left:18px">{xen:phrase BRETA_no_icon}</p>
+	 		</xen:if>
+		</dd>
+	</dl>
+</xen:if>
+
+<xen:radiounit label="{xen:phrase BRETA_import_icon}:" name="choose_upload" value="upload">
+	
+	<xen:option label="{xen:phrase BRETA_use_default_icon}" value="default_url" unselectable="{$noDefault}" selected="{$trophy.breta_select} == 'default_url' || {$trophy.breta_select} == '' || {$newTrophy}" />
+	
+	<xen:option label="{xen:phrase BRETA_import_from_uploaded_file}" value="upload_file" selected="{$trophy.breta_select} == 'upload_file'">
+       		<xen:disabled>
+			<div>
+ 				<div id="myfileupload">
+  					<input type="file" id="uploadfile" name="ImageUpload" onchange="readURL(this);" />
+ 				</div>
+ 				<div id="thumbbox">
+  					<img height="100" width="100" alt="Loading..." id="thumbimage" style="display: none" />
+  					<a class="removeimg" href="javascript:" ></a>
+  				</div>
+			</div>
+        	</xen:disabled>
+        </xen:option>
+        
+	<xen:option label="{xen:phrase BRETA_import_from_url}" value="upload_url" selected="{$trophy.breta_select} == 'upload_url'">
+		<xen:textbox name="upload_url" placeholder="styles/default/xenforo/trophies..." value="{$trophy.breta_url}" />
+	</xen:option>
+	
+	<xen:option label="{xen:phrase BRETA_use_font_awesome}" value="font_awesome" selected="{$trophy.breta_select} == 'font_awesome'">
+		<xen:textbox name="font_awesome" placeholder="fa-angellist, fa-bus, fa-bell-slash..." value="{$trophy.breta_fa}" />
+	</xen:option>
+	
+	<xen:option label="{xen:phrase BRETA_hide_icon}" value="hide_icon" selected="{$trophy.breta_select} == 'hide_icon'" />
+	
+</xen:radiounit>]]></template>
+  </admin_templates>
+  <admin_template_modifications>
+    <modification template="tools_rebuild" modification_key="BRETA_tools_rebuild" description="" execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[/$/]]></find>
+      <replace><![CDATA[<xen:form action="{xen:adminlink 'tools/trigger-deferred'}">
+	<h2 class="subHeading">{xen:phrase BRETA_rebuild_user_trophies}</h2>
+        <xen:spinboxunit name="options[batch]" value="250" step="50" min="1" label="{xen:phrase items_to_process_per_page}:" />
+
+	<xen:submitunit save="{xen:phrase rebuild_now}" />
+	<input type="hidden" name="cache" value="Brivium_ExtraTrophiesAwarded_Deferred_Trophy" />
+</xen:form>]]></replace>
+    </modification>
+    <modification template="trophy_edit" modification_key="BRETA_trophy_edit" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<xen:form action="{xen:adminlink 'trophies/save', $trophy}" class="AutoValidator" data-redirect="yes">]]></find>
+      <replace><![CDATA[<xen:form action="{xen:adminlink 'trophies/save', $trophy}" data-redirect="yes" upload="true">]]></replace>
+    </modification>
+    <modification template="trophy_edit" modification_key="BRETA_trophy_edit_include" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<xen:explain>{xen:phrase optionally_describe_trophy_and_criteria_user_needs_to_award}</xen:explain>
+			</xen:textboxunit>]]></find>
+      <replace><![CDATA[$0
+<xen:include template="BRETA_modify_trophies" />]]></replace>
+    </modification>
+  </admin_template_modifications>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="init_dependencies" execute_order="10" callback_class="Brivium_ExtraTrophiesAwarded_EventListener_Listener" callback_method="initDependencies" active="1" hint="" description=""/>
+    <listener event_id="navigation_tabs" execute_order="10" callback_class="Brivium_ExtraTrophiesAwarded_EventListener_Listener" callback_method="navigationTabs" active="1" hint="" description=""/>
+    <listener event_id="template_hook" execute_order="10" callback_class="Brivium_ExtraTrophiesAwarded_EventListener_Listener" callback_method="templateHook" active="1" hint="" description=""/>
+    <listener event_id="visitor_setup" execute_order="10" callback_class="Brivium_ExtraTrophiesAwarded_EventListener_Listener" callback_method="visitorSetup" active="1" hint="" description=""/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups>
+    <group group_id="BR_ExtraTrophiesAwarded" display_order="1" debug_only="0"/>
+    <option option_id="BETA_showLevel" edit_format="onoff" data_type="boolean" can_backup="1">
+      <default_value>1</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="2"/>
+    </option>
+    <option option_id="BRETA_defaultTrophyIcons" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
+      <default_value>3</default_value>
+      <edit_format_params>min=1
+max=10</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="8"/>
+    </option>
+    <option option_id="BRETA_iconSize" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
+      <default_value>34</default_value>
+      <edit_format_params>min=20
+max=50</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="5"/>
+    </option>
+    <option option_id="BRETA_maximumLeaderBoard" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
+      <default_value>10</default_value>
+      <edit_format_params>min=10
+max=30</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="6"/>
+    </option>
+    <option option_id="BRETA_positionAward" edit_format="checkbox" data_type="array" can_backup="1">
+      <default_value>a:2:{s:9:"help_page";s:1:"1";s:14:"navigation_tab";s:1:"1";}</default_value>
+      <edit_format_params>help_page = {xen:phrase BRETA_help_page}
+navigation_tab = {xen:phrase BRETA_navigation_tab}</edit_format_params>
+      <sub_options>help_page
+navigation_tab</sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="3"/>
+    </option>
+    <option option_id="BRETA_positionAwardOfUser" edit_format="checkbox" data_type="array" can_backup="1">
+      <default_value>a:5:{s:12:"account_menu";s:1:"1";s:25:"bottom_of_user_infomation";s:1:"1";s:11:"member_card";s:1:"1";s:11:"member_view";s:1:"1";s:13:"visitor_panel";s:1:"1";}</default_value>
+      <edit_format_params>account_menu = {xen:phrase BRETA_account_menu}
+bottom_of_user_infomation = {xen:phrase BRETA_bottom_of_user_infomation}
+member_card = {xen:phrase BRETA_member_card}
+member_view = {xen:phrase BRETA_member_view}
+visitor_panel = {xen:phrase BRETA_visitor_panel}</edit_format_params>
+      <sub_options>account_menu
+bottom_of_user_infomation
+member_card
+member_view
+visitor_panel</sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="4"/>
+    </option>
+    <option option_id="BRETA_showTrophyIcon" edit_format="onoff" data_type="boolean" can_backup="1">
+      <default_value>1</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="BR_ExtraTrophiesAwarded" display_order="1"/>
+    </option>
+  </optiongroups>
+  <permissions>
+    <permission_groups/>
+    <permissions>
+      <permission permission_group_id="general" permission_id="BRETA_canSelectTrophies" permission_type="flag" default_value="unset" interface_group_id="generalPermissions" display_order="5"/>
+    </permissions>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="BRETA_account_menu" version_id="1000000" version_string="1.0.0"><![CDATA[Account menu]]></phrase>
+    <phrase title="BRETA_awards" version_id="1000000" version_string="1.0.0"><![CDATA[Awards]]></phrase>
+    <phrase title="BRETA_bottom_of_user_infomation" version_id="1000000" version_string="1.0.0"><![CDATA[Bottom of user infomation]]></phrase>
+    <phrase title="BRETA_current_icon" version_id="1000000" version_string="1.0.0"><![CDATA[Current Icon]]></phrase>
+    <phrase title="BRETA_help_links" version_id="1000000" version_string="1.0.0"><![CDATA[Help Links]]></phrase>
+    <phrase title="BRETA_help_page" version_id="1000000" version_string="1.0.0"><![CDATA[Help page]]></phrase>
+    <phrase title="BRETA_hide_icon" version_id="1010200" version_string="1.2.2"><![CDATA[Hide icon]]></phrase>
+    <phrase title="BRETA_import_from_uploaded_file" version_id="1000000" version_string="1.0.0"><![CDATA[Import from uploaded file]]></phrase>
+    <phrase title="BRETA_import_from_url" version_id="1000000" version_string="1.0.0"><![CDATA[Import from url]]></phrase>
+    <phrase title="BRETA_import_icon" version_id="1000000" version_string="1.0.0"><![CDATA[Import Icon]]></phrase>
+    <phrase title="BRETA_leaderboards" version_id="1000000" version_string="1.0.0"><![CDATA[Leaderboards]]></phrase>
+    <phrase title="BRETA_member_card" version_id="1000000" version_string="1.0.0"><![CDATA[Member card]]></phrase>
+    <phrase title="BRETA_member_view" version_id="1000000" version_string="1.0.0"><![CDATA[Member view]]></phrase>
+    <phrase title="BRETA_navigation_tab" version_id="1000000" version_string="1.0.0"><![CDATA[Navigation tab]]></phrase>
+    <phrase title="BRETA_no_icon" version_id="1010200" version_string="1.2.2"><![CDATA[The icon of this trophy is  hided.]]></phrase>
+    <phrase title="BRETA_please_choose_file" version_id="1000000" version_string="1.0.0"><![CDATA[Please choose image.]]></phrase>
+    <phrase title="BRETA_please_enter_font_awesome" version_id="1000000" version_string="1.0.0"><![CDATA[Please enter font awesome.]]></phrase>
+    <phrase title="BRETA_please_enter_url" version_id="1000000" version_string="1.0.0"><![CDATA[Please enter URL.]]></phrase>
+    <phrase title="BRETA_rebuild_user_trophies" version_id="1010310" version_string="1.3.1"><![CDATA[Rebuild User Trophies]]></phrase>
+    <phrase title="BRETA_show_hide_icon" version_id="1010000" version_string="1.1.0"><![CDATA[Show/hide icon.]]></phrase>
+    <phrase title="BRETA_show_hide_trophy_icon" version_id="1010000" version_string="1.1.0"><![CDATA[Show / hide this trophy icon.]]></phrase>
+    <phrase title="BRETA_trophy_points" version_id="1000000" version_string="1.0.0"><![CDATA[Trophy points]]></phrase>
+    <phrase title="BRETA_use_default_icon" version_id="1000000" version_string="1.0.0"><![CDATA[Use default icon]]></phrase>
+    <phrase title="BRETA_use_font_awesome" version_id="1000000" version_string="1.0.0"><![CDATA[Use font awesome]]></phrase>
+    <phrase title="BRETA_visitor_panel" version_id="1000000" version_string="1.0.0"><![CDATA[Visitor panel]]></phrase>
+    <phrase title="BRETA_x_has_not_been_awarded_any_trophies_yet" version_id="1000000" version_string="1.0.0"><![CDATA[{name} has not been awarded any trophies yet.]]></phrase>
+    <phrase title="option_BETA_showLevel" version_id="1030000" version_string="1.3.0"><![CDATA[Show level and progress bar]]></phrase>
+    <phrase title="option_BETA_showLevel_explain" version_id="1030000" version_string="1.3.0"><![CDATA[Tick this box to show level and progess bar for user.]]></phrase>
+    <phrase title="option_BRETA_defaultTrophyIcons" version_id="1040200" version_string="1.4.2"><![CDATA[Maximum Number Of Trophy Icons]]></phrase>
+    <phrase title="option_BRETA_defaultTrophyIcons_explain" version_id="1040200" version_string="1.4.2"><![CDATA[The highest quantity of trophy icons for each user.]]></phrase>
+    <phrase title="option_BRETA_iconSize" version_id="1000000" version_string="1.0.0"><![CDATA[Icon Size]]></phrase>
+    <phrase title="option_BRETA_iconSize_explain" version_id="1000000" version_string="1.0.0"><![CDATA[Size of award icon.]]></phrase>
+    <phrase title="option_BRETA_maximumLeaderBoard" version_id="1000000" version_string="1.0.0"><![CDATA[Maximum Leader Board]]></phrase>
+    <phrase title="option_BRETA_maximumLeaderBoard_explain" version_id="1000000" version_string="1.0.0"><![CDATA[Maximum value of the leader board.]]></phrase>
+    <phrase title="option_BRETA_positionAward" version_id="1000000" version_string="1.0.0"><![CDATA[Position Displayed The Award List]]></phrase>
+    <phrase title="option_BRETA_positionAwardOfUser" version_id="1000000" version_string="1.0.0"><![CDATA[Award Position Of User]]></phrase>
+    <phrase title="option_BRETA_positionAwardOfUser_explain" version_id="1000000" version_string="1.0.0"><![CDATA[The award position of user]]></phrase>
+    <phrase title="option_BRETA_positionAward_explain" version_id="1000000" version_string="1.0.0"><![CDATA[The position, where is displayed the ward list.]]></phrase>
+    <phrase title="option_BRETA_showTrophyIcon" version_id="1030000" version_string="1.3.0"><![CDATA[Show trophy icon]]></phrase>
+    <phrase title="option_BRETA_showTrophyIcon_explain" version_id="1030000" version_string="1.3.0"><![CDATA[Tick this  box to show trophy icon for user.]]></phrase>
+    <phrase title="option_group_BR_ExtraTrophiesAwarded" version_id="1000000" version_string="1.0.0"><![CDATA[Brivium - Extra Trophies Awarded]]></phrase>
+    <phrase title="option_group_BR_ExtraTrophiesAwarded_description" version_id="1000000" version_string="1.0.0"><![CDATA[]]></phrase>
+    <phrase title="permission_general_BRETA_canSelectTrophies" version_id="1010000" version_string="1.1.0"><![CDATA[Can select number of trophy icons]]></phrase>
+  </phrases>
+  <route_prefixes/>
+  <style_properties/>
+  <templates>
+    <template title="BRETA_awards" version_id="1000000" version_string="1.0.0"><![CDATA[<xen:require css="trophy.css" />
+<xen:require css="BRETA_awards.css" />
+<xen:title>{xen:phrase BRETA_awards}</xen:title>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:link help}">{xen:phrase help}</xen:breadcrumb>
+</xen:navigation>
+
+<xen:if is="{$trophies}">
+	<ol class="section">
+	<xen:foreach loop="$trophies" value="$trophy">
+		<li class="primaryContent">
+			<div class="trophy" id="trophy-{$trophy.trophy_id}">
+				<xen:if is="{$trophy.breta_select} == 'upload_file' || {$trophy.breta_select} == 'default_url' || {$trophy.breta_select} == ''" >
+					<div class="points" style="padding-left: 25px; padding-right: 25px"><img src="{xen:helper trophyIcon, $trophy}"></div>
+				</xen:if>
+				<xen:if is="{$trophy.breta_select} == 'upload_url'" >
+					<div class="points" style="padding-left: 25px; padding-right: 25px"><img src="{$trophy.breta_url}"></div>
+				</xen:if>
+				<xen:if is="{$trophy.breta_select} == 'font_awesome'" >
+					<div class="points" style="padding-left: 25px; padding-right: 25px"><i class="fa {$trophy.breta_fa}"></i></div>
+				</xen:if>
+				
+				<div class="info">
+					<h3 class="title">{$trophy.title}</h3>
+					<p class="description">{xen:raw $trophy.description}</p>
+					<p class="description">{xen:phrase BRETA_trophy_points}: {$trophy.trophy_points}</p>
+				</div>
+			</div>
+		</li>
+	</xen:foreach>
+	</ol>
+<xen:else />
+	<div class="section">{xen:phrase no_trophies_have_been_created_yet}</div>
+</xen:if>]]></template>
+    <template title="BRETA_awards.css" version_id="1040300" version_string="1.4.3"><![CDATA[ul.brAwards {
+	margin-top: 20px;
+}
+
+	li.brAwardItem {
+		text-align: center;
+		display: inline-block;
+		padding-left: 2px;
+		padding-right: 2px;
+	}
+	
+	li.brAwardItem img {
+		max-width: 30px;
+	}
+	
+	li.brAwardItem i {
+		font-size: 30px;
+		vertical-align: 15%;
+	}
+
+.BRETA_awards .info h3, .BRETA_awards .info p {
+	margin-left: 45px;
+}
+
+.BRETA_awards .points {
+	margin-top: 5px;
+}
+	.BRETA_awards .points i {
+		font-size: 34px;
+	}
+label.brCheckboxLabel {
+	float: right;
+	font-size: 11px;
+	color: rgb(150,150,150);
+}
+
+input.brCheckbox {
+	vertical-align: bottom;
+}
+
+ol.brLeader li:nth-child(1) div h3 a {
+	color: red;
+	font-size: 24px;
+}
+
+ol.brLeader li:nth-child(2) div h3 a {
+	color: green;
+	font-size: 20px;
+}
+
+ol.brLeader li:nth-child(3) div h3 a {
+	color: orange;
+	font-size: 18px;
+}
+
+ol.brLeader li div h3 a {
+	font-size: 14px;
+}
+
+.BRETA_awards ol.section div.points img {
+	max-width: 50px !important;
+}
+
+.BRETA_awards div.points img {
+	max-width: 50px !important;
+}
+
+.brAwards .progressbar span.brLevel img{
+	max-width: 28px;
+	position: absolute;
+	top: -7px;
+	left: -26px;
+	background-color: #714545;
+	border-radius: 50%;
+}
+
+.brAwards .progressbar{
+	left: 24px;
+	position: relative;
+	display: block;
+	width: 80%;
+	height: 15px;
+	text-align: center;
+	border-radius: 16px;
+	box-shadow: 0px 4px 4px -4px rgba(255, 255, 255, 0.4),0px -3px 3px -3px rgba(255, 255, 255, 0.25),inset 0px 0px 12px 0px rgba(0, 0, 0, 0.5);
+}
+.brAwards .progressbar:before{
+	position: absolute;
+	display: block;
+	content: "";
+	width: 100%;
+	height: 13px;
+	border-radius: 0px 20px 20px 0px;
+	background: #714545;
+	box-shadow: inset 0px 0px 6px 0px rgba(0, 0, 0, 0.85);
+	border: 1px solid rgba(0,0,0, 0.8);
+}
+.brAwards .bar {
+	position: absolute;
+	display: block;
+	max-width: 100%;
+	height: 11px;
+	top: 2px;
+	left: 2px;
+	border-radius: 16px;
+	overflow: hidden;
+}
+.brAwards .bar.color1 {
+	background: rgb(126,234,25);
+	background: -moz-linear-gradient(top,  rgba(126,234,25,1) 0%, rgba(83,173,0,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(126,234,25,1)), color-stop(100%,rgba(83,173,0,1)));
+	background: -webkit-linear-gradient(top,  rgba(126,234,25,1) 0%,rgba(83,173,0,1) 100%);
+	background: -o-linear-gradient(top,  rgba(126,234,25,1) 0%,rgba(83,173,0,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(126,234,25,1) 0%,rgba(83,173,0,1) 100%);
+	background: linear-gradient(to bottom,  rgba(126,234,25,1) 0%,rgba(83,173,0,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7eea19', endColorstr='#53ad00',GradientType=0 );
+	-webkit-border-radius:16px;
+	border-radius:16px;
+	-webkit-box-shadow: 0px 0px 12px 0px rgba(126, 234, 25, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+	box-shadow: 0px 0px 12px 0px rgba(126, 234, 25, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+}
+.brAwards .bar.color2 {
+	background: rgb(229,195,25);
+	background: -moz-linear-gradient(top,  rgba(229,195,25,1) 0%, rgba(168,140,0,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(229,195,25,1)), color-stop(100%,rgba(168,140,0,1)));
+	background: -webkit-linear-gradient(top,  rgba(229,195,25,1) 0%,rgba(168,140,0,1) 100%);
+	background: -o-linear-gradient(top,  rgba(229,195,25,1) 0%,rgba(168,140,0,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(229,195,25,1) 0%,rgba(168,140,0,1) 100%);
+	background: linear-gradient(to bottom,  rgba(229,195,25,1) 0%,rgba(168,140,0,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e5c319', endColorstr='#a88c00',GradientType=0 );
+	-webkit-box-shadow: 0px 0px 12px 0px rgba(229, 195, 25, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+	box-shadow: 0px 0px 12px 0px rgba(229, 195, 25, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+}
+.brAwards .bar.color3 {
+	background: rgb(232,25,87);
+	background: -moz-linear-gradient(top,  rgba(232,25,87,1) 0%, rgba(170,0,51,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(232,25,87,1)), color-stop(100%,rgba(170,0,51,1)));
+	background: -webkit-linear-gradient(top,  rgba(232,25,87,1) 0%,rgba(170,0,51,1) 100%);
+	background: -o-linear-gradient(top,  rgba(232,25,87,1) 0%,rgba(170,0,51,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(232,25,87,1) 0%,rgba(170,0,51,1) 100%);
+	background: linear-gradient(to bottom,  rgba(232,25,87,1) 0%,rgba(170,0,51,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e81957', endColorstr='#aa0033',GradientType=0 );
+	-webkit-box-shadow: 0px 0px 12px 0px rgba(232, 25, 87, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+	box-shadow: 0px 0px 12px 0px rgba(232, 25, 87, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+}
+.brAwards .bar.color4 {
+	background: rgb(24,109,226);
+	background: -moz-linear-gradient(top,  rgba(24,109,226,1) 0%, rgba(0,69,165,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(24,109,226,1)), color-stop(100%,rgba(0,69,165,1)));
+	background: -webkit-linear-gradient(top,  rgba(24,109,226,1) 0%,rgba(0,69,165,1) 100%);
+	background: -o-linear-gradient(top,  rgba(24,109,226,1) 0%,rgba(0,69,165,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(24,109,226,1) 0%,rgba(0,69,165,1) 100%);
+	background: linear-gradient(to bottom,  rgba(24,109,226,1) 0%,rgba(0,69,165,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#186de2', endColorstr='#0045a5',GradientType=0 );
+	-webkit-box-shadow: 0px 0px 12px 0px rgba(24, 109, 226, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+	box-shadow: 0px 0px 12px 0px rgba(24, 109, 226, 1),inset 0px 1px 0px 0px rgba(255, 255, 255, 0.45),inset 1px 0px 0px 0px rgba(255, 255, 255, 0.25),inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25);
+}
+.brAwards .bar:before {
+	position:absolute;
+	display:block;
+	content:"";
+	width:100%;
+	height:150%;
+	top:-25%;
+	left:-25px;
+	background: -moz-radial-gradient(center, ellipse cover,  rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0) 51%, rgba(255,255,255,0) 100%);
+	background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(255,255,255,0.35)), color-stop(50%,rgba(255,255,255,0.01)), color-stop(51%,rgba(255,255,255,0)), color-stop(100%,rgba(255,255,255,0)));
+	background: -webkit-radial-gradient(center, ellipse cover,  rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.01) 50%,rgba(255,255,255,0) 51%,rgba(255,255,255,0) 100%);
+	background: -o-radial-gradient(center, ellipse cover,  rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.01) 50%,rgba(255,255,255,0) 51%,rgba(255,255,255,0) 100%);
+	background: -ms-radial-gradient(center, ellipse cover,  rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.01) 50%,rgba(255,255,255,0) 51%,rgba(255,255,255,0) 100%);
+	background: radial-gradient(ellipse at center,  rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.01) 50%,rgba(255,255,255,0) 51%,rgba(255,255,255,0) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#59ffffff', endColorstr='#00ffffff',GradientType=1 );
+}
+.brAwards .bar:after {
+	position:absolute;
+	display:block;
+	content:"";
+	width:40%;
+	height:16px;
+	right:0;
+	top:0;
+	-webkit-border-radius: 0px 16px 16px 0px;
+	border-radius: 0px 16px 16px 0px;
+	background: -moz-linear-gradient(left,  rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 98%, rgba(255,255,255,0) 100%);
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,255,255,0)), color-stop(98%,rgba(255,255,255,0.6)), color-stop(100%,rgba(255,255,255,0)));
+	background: -webkit-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.6) 98%,rgba(255,255,255,0) 100%);
+	background: -o-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.6) 98%,rgba(255,255,255,0) 100%);
+	background: -ms-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.6) 98%,rgba(255,255,255,0) 100%);
+	background: linear-gradient(to right,  rgba(255,255,255,0) 0%,rgba(255,255,255,0.6) 98%,rgba(255,255,255,0) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#00ffffff',GradientType=1 );
+}
+
+.brAwards .bar span {
+	position:absolute;
+	display:block;
+	width:100%;
+	height:64px;
+	-webkit-border-radius:16px;
+	border-radius:16px;
+	top:0;
+	left:0;
+	background:url("styles/brivium/ExtraTrophiesAwarded/gadient-animate.png") 0 0;
+	-webkit-animation: sparkle 1500ms linear infinite;
+    	-moz-animation: sparkle 1500ms linear infinite;
+    	-o-animation: sparkle 1500ms linear infinite;
+   	animation: sparkle 1500ms linear infinite;
+	opacity:0.2;
+}
+
+@-webkit-keyframes sparkle {
+	from {background-position: 0 0;}
+	to {background-position: 0 -64px;}
+}
+@-moz-keyframes sparkle {
+	from {background-position: 0 0;}
+	to {background-position: 0 -64px;}
+}
+@-o-keyframes sparkle {
+	from {background-position: 0 0;}
+	to {background-position: 0 -64px;}
+}
+@keyframes sparkle {
+	from {background-position: 0 0;}
+	to {background-position: 0 -64px;}
+}
+
+<xen:if is="{xen:property enableResponsive}">
+	@media (max-width:{xen:property maxResponsiveNarrowWidth})
+	{
+		.Responsive .messageUserInfo .brAwards .progressbar
+		{
+			display:none;
+		}
+	}
+</xen:if>]]></template>
+    <template title="BRETA_award_list" version_id="1010000" version_string="1.1.0"><![CDATA[<xen:require css="trophy.css" />
+<xen:require css="BRETA_awards.css" />
+<xen:require js="js/brivium/ExtraTrophiesAwarded/show_icon.js" />
+<xen:title>{xen:phrase BRETA_awards}: {$user.username}</xen:title>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:link full:members, $user}">{$user.username}</xen:breadcrumb>
+</xen:navigation>
+
+<div class="section">
+	<xen:if is="{$awards}">
+		<ol class="overlayScroll">
+		<xen:foreach loop="$awards" value="$trophy">
+			<li class="primaryContent">
+				<xen:include template="BRETA_award_list_item" />
+			</li>
+		</xen:foreach>
+		</ol>
+	<xen:else />
+		<div class="primaryContent">{xen:phrase BRETA_x_has_not_been_awarded_any_trophies_yet, 'name={$user.username}'}</div>
+	</xen:if>
+</div>]]></template>
+    <template title="BRETA_award_list_item" version_id="1040200" version_string="1.4.2"><![CDATA[<div class="trophy" id="trophy-{$trophy.trophy_id}">
+	<xen:if is="{$trophy.breta_select} == 'upload_file' || {$trophy.breta_select} == 'default_url' || {$trophy.breta_select} == ''" >
+		<div class="points" style="padding-left: 25px; padding-right: 25px"><img src="{xen:helper trophyIcon, $trophy}"></div>
+	</xen:if>
+	<xen:if is="{$trophy.breta_select} == 'upload_url'" >
+		<div class="points" style="padding-left: 25px; padding-right: 25px"><img src="{$trophy.breta_url}"></div>
+	</xen:if>
+	<xen:if is="{$trophy.breta_select} == 'font_awesome'" >
+		<div class="points" style="padding-left: 25px; padding-right: 25px"><i class="fa {$trophy.breta_fa}"></i></div>
+	</xen:if>
+	
+	<xen:if is="{$trophy.award_date}">
+		<div class="awarded">{xen:phrase awarded}: <xen:datetime time="$trophy.award_date" /></div>
+	</xen:if>
+				
+	<div class="info">
+		<h3 class="title">{$trophy.title}</h3>
+		<p class="description">{xen:raw $trophy.description}</p>
+		<p class="description">{xen:phrase BRETA_trophy_points}: {$trophy.trophy_points}</p>
+	</div>
+	<xen:if is="{$canShowIcons}" >
+		<label class="brCheckboxLabel Tooltip" title="{xen:phrase BRETA_show_hide_trophy_icon}">
+			<input type="checkbox" name="{$trophy.trophy_id}" value="1" {xen:checked '{$trophy.breta_show_icon}'} class="brCheckbox">
+			{xen:phrase BRETA_show_hide_icon}
+		</label>
+	</xen:if>
+</div>]]></template>
+    <template title="BRETA_help_links" version_id="1000000" version_string="1.0.0"><![CDATA[<ul class="secondaryContent blockLinksList">
+	<li><a href="{xen:link help/awards}">{xen:phrase BRETA_awards}</a></li>
+	<li><a href="{xen:link help/leaderboards}">{xen:phrase BRETA_leaderboards}</a></li>				
+</ul>]]></template>
+    <template title="BRETA_help_sidebar_links" version_id="1000000" version_string="1.0.0"><![CDATA[<li><a href="{xen:link help/awards}" class="{xen:if "{$selected} == 'awards'", 'secondaryContent', 'primaryContent'}">{xen:phrase BRETA_awards}</a></li>
+<li><a href="{xen:link help/leaderboards}" class="{xen:if "{$selected} == 'leaderboards'", 'secondaryContent', 'primaryContent'}">{xen:phrase BRETA_leaderboards}</a></li>]]></template>
+    <template title="BRETA_leaderboards" version_id="1000000" version_string="1.0.0"><![CDATA[<xen:require css="xenforo_member_list_item.css" />
+<xen:title>{xen:phrase BRETA_leaderboards}</xen:title>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:link help}">{xen:phrase help}</xen:breadcrumb>
+</xen:navigation>
+
+<div class="section">
+	<ol class="memberList brLeader">
+		<xen:foreach loop="$users" value="$user">
+			<xen:include template="member_list_item">
+				<xen:set var="$noOverlay">1</xen:set>
+				<xen:set var="$extraTemplate"><xen:if is="{$bigKey}"><span class="bigNumber">{xen:number {$user.{$bigKey}}}</span></xen:if></xen:set>
+			</xen:include>
+		</xen:foreach>
+	</ol>
+</div>]]></template>
+    <template title="BRETA_member_view_sidebar_middle1" version_id="1030000" version_string="1.3.0"><![CDATA[<xen:if is="{$brShowLevel}">
+	<xen:require css="BRETA_awards.css" />
+	<script  type="text/javascript">
+		$(document).ready(function () {
+			var parentWidth = $('.brAwards .progressbar').width() - 2;
+			$('.progressbar').each(function(){
+				var t = $(this),
+					dataperc = t.attr('data-perc'),
+					barperc = Math.round(dataperc*parentWidth/100);
+	                        if(dataperc >= 0 && dataperc < 25){
+	                                t.find('.bar').addClass("color4");
+	                        } else if (dataperc >= 25 && dataperc < 50) {
+	                                t.find('.bar').addClass("color3");
+	                        } else if (dataperc >= 50 && dataperc < 75) {
+	                                t.find('.bar').addClass("color2");
+	                        } else {
+	                        	t.find('.bar').addClass("color1");
+	                        }
+				t.find('.bar').animate({width:barperc}, dataperc*25);
+	                        
+			});
+		});
+	</script>
+	<div class="section infoBlock">
+		<div class="secondaryContent pairsJustified brAwards">
+			<div class="progressbar Tooltip" title="{$user.percentTrophy}%" data-perc="{$user.percentTrophy}">
+				<span class="brLevel">
+	                              <img src="styles/brivium/ExtraTrophiesAwarded/level-{$user.breta_user_level}.png">
+	                        </span>
+	                	<span style="color: yellow; position: relative; z-index: 1; top: -2px">{$user.trophy_points}/{$user.breta_next_level}</span>
+				<div class="bar"><span></span></div>
+			</div>
+		</div>
+	</div>
+</xen:if>]]></template>
+    <template title="BRETA_member_view_tabs_content" version_id="1040100" version_string="1.4.1"><![CDATA[<li id="bretaAwards" class="profileContent" data-loadUrl="{xen:link members/awards, $user}">
+	{xen:phrase loading}...
+	<noscript><a href="{xen:link members/awards, $user}">{xen:phrase view}</a></noscript>
+</li>]]></template>
+    <template title="BRETA_member_view_tabs_heading" version_id="1040100" version_string="1.4.1"><![CDATA[<li><a href="{$requestPaths.requestUri}#bretaAwards">{xen:phrase BRETA_awards}</a></li>]]></template>
+    <template title="BRETA_message_user_info" version_id="1030200" version_string="1.3.2"><![CDATA[<xen:if is="{$brViewUerInfo} && ({$brShowTrophyIcon} || {$brShowLevel}) && {$user.user_id}">
+	<xen:require css="BRETA_awards.css" />
+        
+	<ul class="brAwards">
+			<xen:if is="{$brShowTrophyIcon}">
+				<xen:foreach loop="$user.awards" value="$award">
+					<li class="brAwardItem Tooltip" title="{xen:if '{$award.description} == ""', {$award.title}, {$award.description}}">
+					<xen:if is="{$award.breta_select} == 'upload_file' || {$award.breta_select} == 'default_url' || {$award.breta_select} == ''" >
+						<img src="{xen:helper trophyIcon, $award}">
+					</xen:if>
+					<xen:if is="{$award.breta_select} == 'upload_url'" >
+						<img src="{$award.breta_url}">
+					</xen:if>
+					<xen:if is="{$award.breta_select} == 'font_awesome'" >
+						<i class="fa {$award.breta_fa}" style="vertical-align: 30%; font-size: 23px"></i>
+					</xen:if>
+					</li>
+				</xen:foreach>
+			</xen:if>
+			<xen:if is="{$brShowLevel}">
+				<script  type="text/javascript">
+					$(document).ready(function () {
+						var parentWidth = $('.brAwards .progressbar').width() - 2;
+						$('.brAwards .progressbar').each(function(){
+							var t = $(this),
+								dataperc = t.attr('data-perc'),
+								barperc = Math.round(dataperc*parentWidth/100);
+			                                if(dataperc >= 0 && dataperc < 25){
+				                                t.find('.bar').addClass("color4");
+			                                } else if (dataperc >= 25 && dataperc < 50) {
+			                                        t.find('.bar').addClass("color3");
+			                                } else if (dataperc >= 50 && dataperc < 75) {
+			                                        t.find('.bar').addClass("color2");
+			                                } else {
+			                                        t.find('.bar').addClass("color1");
+			                                }
+							t.find('.bar').animate({width:barperc}, dataperc*25);
+						});
+					});
+				</script>
+				<div class="progressbar Tooltip" style="margin-top: 15px" title="{$user.percentTrophy}%" data-perc="{$user.percentTrophy}">
+	                                <span class="brLevel">
+	                                        <img src="styles/brivium/ExtraTrophiesAwarded/level-{$user.breta_user_level}.png">
+	                                </span>
+	                                <span style="color:yellow; position:relative; z-index:1; font-size:12px; font-weight:bold">{$user.trophy_points}/{$user.breta_next_level}</span>
+					<div class="bar"><span></span></div>
+				</div>
+			</xen:if>
+	</ul>
+</xen:if>]]></template>
+    <template title="BRETA_navigation_visitor_tab" version_id="1010310" version_string="1.3.1"><![CDATA[<xen:if is="{$visitor.awards}">
+	<xen:require css="BRETA_awards.css" />
+	
+	<ul class="brAwards" style="padding-bottom: 15px; margin-top: 5px">
+	        <xen:foreach loop="$visitor.awards" value="$award">
+	                <li class="brAwardItem Tooltip" title="{xen:if '{$award.description} == ""', {$award.title}, {$award.description}}">
+	                        <xen:if is="{$award.breta_select} == 'upload_file' || {$award.breta_select} == 'default_url' || {$award.breta_select} == ''" >
+					<img src="{xen:helper trophyIcon, $award}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'upload_url'" >
+					<img src="{$award.breta_url}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'font_awesome'" >
+					<i class="fa {$award.breta_fa}"></i>
+				</xen:if>
+		        </li>
+		</xen:foreach>
+	</ul>
+</xen:if>]]></template>
+    <template title="BRETA_sidebar_visitor_panel" version_id="1040000" version_string="1.4.0"><![CDATA[<xen:if is="{$visitor.awards}">
+	<xen:require css="BRETA_awards.css" />
+	
+	<ul class="brAwards" style="padding-bottom: 15px; margin-top: 5px">
+	        <xen:foreach loop="$visitor.awards" value="$award">
+	                <li class="brAwardItem Tooltip" title="{xen:if '{$award.description} == ""', {$award.title}, {$award.description}}">
+	                        <xen:if is="{$award.breta_select} == 'upload_file' || {$award.breta_select} == 'default_url' || {$award.breta_select} == ''" >
+					<img src="{xen:helper trophyIcon, $award}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'upload_url'" >
+					<img src="{$award.breta_url}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'font_awesome'" >
+					<i class="fa {$award.breta_fa}"></i>
+				</xen:if>
+		        </li>
+		</xen:foreach>
+	</ul>
+</xen:if>]]></template>
+  </templates>
+  <public_template_modifications>
+    <modification template="member_card" modification_key="BRETA_member_card" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<dl class="userStats pairsInline">
+		<xen:hook name="member_card_stats">]]></find>
+      <replace><![CDATA[<xen:if is="{$brViewCard}">
+	<xen:require css="BRETA_awards.css" />
+
+	<ul class="brAwards" style="margin-bottom: 10px; margin-top: 5px">
+		<xen:foreach loop="$user.awards" value="$award">
+			<li class="brAwardItem Tooltip" title="{xen:if '{$award.description} == ""', {$award.title}, {$award.description}}">
+				<xen:if is="{$award.breta_select} == 'upload_file' || {$award.breta_select} == 'default_url' || {$award.breta_select} == ''" >
+					<img src="{xen:helper trophyIcon, $award}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'upload_url'" >
+					<img src="{$award.breta_url}">
+				</xen:if>
+				<xen:if is="{$award.breta_select} == 'font_awesome'" >
+					<i class="fa {$award.breta_fa}"></i>
+				</xen:if>
+			</li>
+		</xen:foreach>
+	</ul>
+</xen:if>
+$0]]></replace>
+    </modification>
+    <modification template="message_user_info" modification_key="BRETA_message_user_info" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[{xen:helper userBanner, $user, 'wrapped'}
+			<!-- slot: message_user_info_text -->]]></find>
+      <replace><![CDATA[$0
+<xen:include template="BRETA_message_user_info" />]]></replace>
+    </modification>
+    <modification template="navigation_visitor_tab" modification_key="BRETA_navigation_visitor_tab" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<xen:if hascontent="true"><div class="muted"><xen:contentcheck>{xen:helper usertitle, $visitor}</xen:contentcheck></div></xen:if>]]></find>
+      <replace><![CDATA[$0
+<xen:hook name="BRETA_navigation_visitor_tab" />]]></replace>
+    </modification>
+    <modification template="sidebar_visitor_panel" modification_key="BRETA_sidebar_visitor_panel" description="" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<dl class="pairsJustified"><dt>{xen:phrase points}:</dt> <dd>{xen:number $visitor.trophy_points}</dd></dl>
+			</div>
+			</xen:hook>]]></find>
+      <replace><![CDATA[$0
+<xen:hook name="BRETA_sidebar_visitor_panel" />]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+  <brc_actions/>
+</addon>
