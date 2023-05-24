@@ -1,0 +1,102 @@
+# Ignore vendor directory created by Composer
+/vendor/
+
+# Ignore dependency lock files
+composer.lock
+composer.phar
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+
+# Ignore system and temporary files
+Thumbs.db
+.DS_Store
+.cache/
+*.swp
+*.swo
+*.log
+
+# Ignore sensitive or environment-specific information
+.env
+.env.*
+
+# Ignore build and deployment artifacts
+/build/
+/dist/
+/deploy/
+
+# Ignore user uploads and generated content
+/public/uploads/
+/public/assets/
+
+# Ignore log files
+/log/
+
+# Ignore session and cache files
+/sessions/
+/cache/
+
+# Ignore configuration files that may contain sensitive information
+/config/*.php
+
+# Ignore compiled PHP files
+*.phpc
+
+# Ignore PHPUnit test result files
+/phpunit.xml
+/phpunit.xml.dist
+/phpunit.result.cache
+/.phpunit.result.cache
+
+# Ignore documentation and generated API files
+/docs/
+/phpdoc-*.xml
+/phpdox.xml
+
+# Ignore composer-generated autoload files
+/vendor/autoload.php
+
+# Ignore PHPCS coding standard configuration
+/.phpcs.xml
+/phpcs.xml.dist
+
+# Ignore PHPLint configuration
+/.phplint
+
+# Ignore Codeception testing framework directories
+/tests/_output/
+/tests/_support/_generated/
+
+# Ignore Behat testing framework directories
+/tests/behat/vendor/
+/tests/behat/node_modules/
+
+# Ignore Laravel Mix generated files
+/mix-manifest.json
+/public/css/
+/public/js/
+
+# Ignore WordPress specific files and directories
+/wp-content/
+/wp-includes/
+/wp-admin/
+/wp-config.php
+/wp-config-sample.php
+/readme.html
+/license.txt
+
+# Ignore Laravel specific files and directories
+/bootstrap/cache/
+/storage/
+/public/storage/
+.env.*
+.phpunit.result.cache
+
+# Ignore Symfony specific files and directories
+/var/
+/bin/
+/web/
+
+# Ignore Visual Studio Code directory
+.vscode/
