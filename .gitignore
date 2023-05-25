@@ -100,3 +100,6 @@ Thumbs.db
 
 # Ignore Visual Studio Code directory
 .vscode/
+
+# Ignore data
+/data/
