@@ -557,27 +557,7 @@
 				</div>
 				</xf:if>
 			</div>
-			<ul class="brmsTabNav u-clearFix">
-				<xf:contentcheck>
-				<xf:foreach loop="$modernStatistic.tabData" key="$key" value="$tab">
-					<xf:if is="{$tab.active} && (({$tab.type}!='my_threads' && {$tab.type}!='your_profile_posts')||{$xf.visitor.user_id})">
-						<li class="brmlShow"><a class="brmsTabHandler_{$key}" href="javascript:;" data-content="brmsTabContent_{$key}" data-tabid="{$key}"><span>{{ $tab.defaultTitle ? $tab.defaultTitle : $tab.title }}</span></a></li>
-					</xf:if>
-				</xf:foreach>
-				</xf:contentcheck>
-				<li class="brmsTabNavHiddenMenu last">
-					<div class="brmsTabNavHidden brmsDropdownToggle">
-						<a href="javascript:;" class="brmsIco brmsIcoList"></a>
-						<ul class="brmsDropdownMenu">
-							<xf:foreach loop="$modernStatistic.tabData" key="$key" value="$tab">
-								<xf:if is="{$tab.active} && ({$tab.type}!='my_threads'||{$xf.visitor.user_id})">
-									<li class="brmlShow"><a class="brmsTabHandler_{$key}" href="javascript:;" data-content="brmsTabContent_{$key}" data-tabid="{$key}"><span>{{ $tab.defaultTitle ? $tab.defaultTitle : $tab.title }}</span></a></li>
-								</xf:if>
-							</xf:foreach>
-						</ul>
-					</div>
-				</li>
-			</ul>
+			
 		</div>
 
 		<xf:foreach loop="$modernStatistic.tabData" key="$key" value="$tab">

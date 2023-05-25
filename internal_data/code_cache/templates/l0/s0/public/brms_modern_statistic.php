@@ -94,31 +94,7 @@ return array('macros' => array(), 'code' => function($__templater, array $__vars
 			}
 			$__finalCompiled .= '
 			</div>
-			<ul class="brmsTabNav u-clearFix">
-				' . $__compilerTemp1 . '
-				<li class="brmsTabNavHiddenMenu last">
-					<div class="brmsTabNavHidden brmsDropdownToggle">
-						<a href="javascript:;" class="brmsIco brmsIcoList"></a>
-						<ul class="brmsDropdownMenu">
-							';
-			if ($__templater->isTraversable($__vars['modernStatistic']['tabData'])) {
-				foreach ($__vars['modernStatistic']['tabData'] AS $__vars['key'] => $__vars['tab']) {
-					$__finalCompiled .= '
-								';
-					if ($__vars['tab']['active'] AND (($__vars['tab']['type'] != 'my_threads') OR $__vars['xf']['visitor']['user_id'])) {
-						$__finalCompiled .= '
-									<li class="brmlShow"><a class="brmsTabHandler_' . $__templater->escape($__vars['key']) . '" href="javascript:;" data-content="brmsTabContent_' . $__templater->escape($__vars['key']) . '" data-tabid="' . $__templater->escape($__vars['key']) . '"><span>' . ($__vars['tab']['defaultTitle'] ? $__templater->escape($__vars['tab']['defaultTitle']) : $__templater->escape($__vars['tab']['title'])) . '</span></a></li>
-								';
-					}
-					$__finalCompiled .= '
-							';
-				}
-			}
-			$__finalCompiled .= '
-						</ul>
-					</div>
-				</li>
-			</ul>
+			
 		</div>
 
 		';
